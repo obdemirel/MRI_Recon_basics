@@ -1,4 +1,4 @@
-# MRI_Recon_basics
+# MRI Image Reconstruction 
 This is a tutorial of MRI reconstructions including CG-SENSE, GRAPPA, compressed sensing and image enhacement using deep learning on an example dental image. 
 
 To run this code, please use basic_MRI_recon.m
