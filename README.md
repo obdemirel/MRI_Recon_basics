@@ -12,4 +12,4 @@ Input data:
 - kspace (RO x PE x NO_C)
 - maps (RO x PE x NO_C)
 
-![Input](assets/final.png)
+![final](assets/final.png)
