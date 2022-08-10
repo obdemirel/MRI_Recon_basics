@@ -1,6 +1,5 @@
 # MRI Image Reconstruction 
-This is a tutorial of MRI reconstructions including CG-SENSE, GRAPPA, compressed sensing and image enhacement using deep learning on an example dental image. 
-
+This is a tutorial of MRI reconstructions including CG-SENSE, GRAPPA, compressed sensing and image enhacement using deep learning.
 To run this code, please use basic_MRI_recon.m
 
 RO:       # of readout lines,
