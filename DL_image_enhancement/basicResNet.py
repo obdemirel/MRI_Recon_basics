@@ -68,16 +68,3 @@ class basicResNet(nn.Module):
         
         FirstLayerOutput = self.FirstLayer(x)
         return self.LastLayer(FirstLayerOutput + self.ResNetConv(FirstLayerOutput))
-
-
-# testing, if correct it should give a network description
-'''
-if __name__ == '__main__':
-    net = ZcResNet(input_channels=2, intermediateChannels= 64, output_channels=2)
-    print(net)
-    
-    # check parameters 
-    for name, param in net.named_parameters():
-        print(name, param.size(), type(param))
-
-'''
