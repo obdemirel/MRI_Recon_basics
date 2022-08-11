@@ -14,10 +14,10 @@ import torch.distributed as dist
 import torch.utils.data.distributed
 from collections import OrderedDict
 import time
-
+#select the GPU you want to use
 os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
-
+# count the tunable parameters
 def get_parameter_number(net):
     total_num = sum(p.numel() for p in net.parameters())
     trainable_num = sum(p.numel() for p in net.parameters() if p.requires_grad)
@@ -34,15 +34,13 @@ def Testing(network, device, image_path):
                                                #shuffle=True)  # here we use sampler to test distributed version
                                                sampler = Data_sampler)
 
-    # epoches
-
-    # start torch.nn.module's training mode
+    
     network.eval()
     # for loop over batches
     
     for ref_im, acc_im in data_loader:
         
-        # get the data from data loader. 
+        # open these if you want to use CPUs only
         #acc_im = acc_im.to(device=device, dtype=torch.float32)
         #ref_im = ref_im.to(device=device, dtype=torch.float32)
         
@@ -53,11 +51,13 @@ def Testing(network, device, image_path):
         time_s = time.time()
         recon = network(acc_im)
         
+        
         time_e = time.time()
         recon = recon.cpu().detach().numpy()
         acc_im = acc_im.cpu().detach().numpy()
         ref_im = ref_im.cpu().detach().numpy()
-        # R2C
+        
+        # Real to complex
         recon = np.squeeze(recon[:,0,:,:]+recon[:,1,:,:]*1j).transpose([0,1])
         ref_im = np.squeeze(ref_im[:,0,:,:]+ref_im[:,1,:,:]*1j).transpose([0,1])
         acc_im = np.squeeze(acc_im[:,0,:,:]+acc_im[:,1,:,:]*1j).transpose([0,1])
@@ -78,27 +78,19 @@ if __name__ == "__main__":
     
 
 
-    # Define the unrolled network, using DataParallel to work with multiple GPUs
-    network = ResNet.basicResNet(input_channels = 2, intermediateChannels = 64, output_channels = 2)
 
+    network = ResNet.basicResNet(input_channels = 2, intermediateChannels = 64, output_channels = 2)
+    
+    #load the latest or best model
     savedModel = torch.load("./ModelTemp/best_model_ResNet_Epoch99.pth")
 
     # Load historical model
-    #network.load_state_dict(new_state_dict)
     network.load_state_dict(savedModel)
 
-    #network = nn.DataParallel(network)
-    # move to device
+
     network = network.cuda()#network.to(device=device)
-    #network = network.to(device=device)
-    
-    # lets RO!
-    
-    # data_path
-    #imageroute = '/home/daedalus2-data2/icarus/Burak_Files/unnormalized_knee/chi_test/yedek2/'
-    #imageroute = '/home/daedalus1-raid1/omer-data/brain_flair/test/noPF/'
-    #imageroute = './database/'
-    imageroute = '/home/daedalus1-raid1/omer-data/brain_flair/basic_DL_recon/test/'
+   
+    imageroute = './database/test/'
     
     # Get EVERYTHING
     output = Testing(network, device, imageroute)

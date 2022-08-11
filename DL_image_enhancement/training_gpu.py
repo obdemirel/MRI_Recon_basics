@@ -9,14 +9,16 @@ import scipy.io as sio
 import matplotlib.pyplot as plt
 import os
 import torch.nn.functional as F
-os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+#select the GPU
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
-    
+## Loss calculation. A mixed l1-l2 norm is used    
 def myloss(recon, label):
     return torch.norm(recon-label,p=1)/torch.norm(label,p=1)+torch.norm(recon-label,p=2)/torch.norm(label,p=2)
     #return loss_calc
 
+# training for 300 epoch with LR=1e-3    
 def Training(network, device, image_path, epochs=300, batch_size=1, LearningRate=1e-3):
 
     CartesianData = FeedData.dataloader(datapath = image_path)
@@ -45,11 +47,11 @@ def Training(network, device, image_path, epochs=300, batch_size=1, LearningRate
             optimizer.zero_grad()
             # do zero_grad before every iteration
             
-            #acc_im = acc_im.to(device=device, dtype=torch.complex64)
-            #ref_im = ref_im.to(device=device, dtype=torch.complex64)
-            
+            #Use the followings if you want to use CPUs instead of GPU
+
             #cc_im = acc_im.to(device=device, dtype=torch.float32)
             #ref_im = ref_im.to(device=device, dtype=torch.float32)
+            
             
             acc_im = acc_im.cuda()
             ref_im = ref_im.cuda()
@@ -70,7 +72,7 @@ def Training(network, device, image_path, epochs=300, batch_size=1, LearningRate
             #print('Max of Label')
             #print(torch.max(torch.abs(kspace_validation)))
             #sio.savemat('ReconEpoch%d.mat'%epoch,{'recon':recon.cpu().detach().numpy(),'label':ref_im.cpu().detach().numpy()})
-            # save best weights. Notice it allows loss goes higher but just save yet the best it got
+            #save each epoch if needed, although this may be too much data to save
              
 
             loss_buff = np.append(loss_buff, loss.item())
@@ -80,7 +82,7 @@ def Training(network, device, image_path, epochs=300, batch_size=1, LearningRate
             # update parameters
             optimizer.step()
         
-    	
+    	# only save some of the models
         sio.savemat('LossCurve.mat',{'loss':loss_List})    
         loss_List = np.append(loss_List, np.mean(loss_buff)/2)
         if (epoch % 3 == 0):
@@ -115,32 +117,22 @@ if __name__ == "__main__":
     
     # check CUDA availiability
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    #device = torch.device('cpu')
-    
-    
-    # Define the unrolled network, using DataParallel to work with multiple GPUs
-    network = ResNet.basicResNet(input_channels = 2, intermediateChannels = 64, output_channels = 2)
 
     
-    # Load historical model 
-    #network.load_state_dict(torch.load("best_model_ResNet_singleData.pth"))
-   
-    #network = nn.DataParallel(network)
-    # move to device
-    #network = network.cuda()#network.to(device=device)
+    
+    # Define the ResNet here
+    network = ResNet.basicResNet(input_channels = 2, intermediateChannels = 64, output_channels = 2)
+
+
+    # open this of you want to use CPUs only
     #network = network.to(device=device)
     network = network.cuda()
     
-    # lets RO!
-    # data_path
-    #imageroute = '/home/daedalus2-data2/icarus/Burak_Files/unnormalized_knee/burak_training2/'
-    imageroute = '/home/daedalus1-raid1/omer-data/brain_flair/basic_DL_recon/'
-    #imageroute = './database/'
-    #imageroute = '/home/daedalus1-raid1/omer-data/knee_pdfs_train/' #brain_flair/'
-
+    # Image route consist of the database
+    imageroute = './database/'
+    
     [recon,acc_im,label,loss_List] = Training(network, device, imageroute)
-    #recon = np.squeeze(recon.cpu().detach().numpy())
-    #recon = np.squeeze(recon[:,0:1,:,:]+recon[:,1:2,:,:]*1j)
+    
     
     # save the last batch 
     sio.savemat('LossCurve.mat',{'loss':loss_List})
